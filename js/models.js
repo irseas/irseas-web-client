@@ -17,17 +17,17 @@ var Buffer = Backbone.Model.extend({
 var ChatBuffer = Backbone.Model.extend({
   messageHandlers: _.extend(Buffer.prototype.messageHandlers, {    
     buffer_msg: function (message) {
-      this.trigger('line', message.from + ':' + message.msg);
+      this.trigger('line', message);
     },
 
     buffer_me_msg: function (message) {
-      this.trigger('line', '* ' + message.from + ' ' + message.msg);
+      this.trigger('line', message);
     },
     
     buffer_hidden: function (message) {
       this.trigger('hidden');
     }
-  })
+  }),
 });
 
 var ChannelBuffer = ChatBuffer.extend({
@@ -38,26 +38,29 @@ var ChannelBuffer = ChatBuffer.extend({
 
   messageHandlers: _.extend(ChatBuffer.prototype.messageHandlers, {
     you_joined_channel: function (message) {
-      this.trigger('line', 'You have joined');
+      this.trigger('text_line', 'You have joined');
     },
 
     channel_mode_is: function (message) {
-      this.trigger('line', 'Mode is: ' + message.newmode);
+      this.trigger('text_line', 'Mode is: ' + message.newmode);
     },
     
     channel_timestamp: function (message) {
-      this.trigger('line', 'Created at: ' + message.timestamp);
+      this.trigger('text_line', 'Created at: ' + message.timestamp);
     },
     
     joined_channel: function (message) {
-      this.trigger('line', message.nick + ' has joined');
-      
+      //this.trigger('line', message.nick + ' has joined');
+      this.trigger('line', message);
+
       if (!this.network.isBacklog)
         this.memberList.add(message);
     },
     
     parted_channel: function (message) {
-      this.trigger('line', message.nick + ' has left');
+      //this.trigger('line', message.nick + ' has left');
+      this.trigger('line', message);
+      
       if (!this.network.isBacklog) {
         var member = this.memberList.findByNick(message.nick);
         this.memberList.remove(member);
@@ -65,7 +68,8 @@ var ChannelBuffer = ChatBuffer.extend({
     },
     
     quit: function (message) {
-      this.trigger('line', message.nick + ' has quit');
+      //this.trigger('line', message.nick + ' has quit');
+      this.trigger('line', message);
       
       if (!this.network.isBacklog) {        
         var member = this.memberList.findByNick(message.nick);
@@ -74,7 +78,7 @@ var ChannelBuffer = ChatBuffer.extend({
     },
     
     nickchange: function (message) {
-      this.trigger('line', message.oldnick + ' is now known as ' + message.newnick);
+      this.trigger('text_line', message.oldnick + ' is now known as ' + message.newnick);
 
       if (!this.network.isBacklog) {
         var member = this.memberList.findByNick(message.nick);
@@ -91,7 +95,7 @@ var ChannelBuffer = ChatBuffer.extend({
     },
     
     user_channel_mode: function (message) {
-      this.trigger('line', '*** Mode ' + message.diff + ' ' + message.nick + ' by ' + message.from);
+      this.trigger('text_line', '*** Mode ' + message.diff + ' ' + message.nick + ' by ' + message.from);
       if (!this.network.isBacklog) {
         var member = this.memberList.findByNick(message.nick);
         member.updateMode(message);
@@ -127,7 +131,7 @@ var ConsoleBuffer = Buffer.extend({
     ];
     _.each(statusMessages, _.bind(function (name) {
       this.messageHandlers[name] = function (message) {
-        this.trigger('line', message.msg);
+        this.trigger('text_line', message.msg);
       }
     }, this));
     
@@ -136,26 +140,26 @@ var ConsoleBuffer = Buffer.extend({
     ];
     _.each(valueMessages, _.bind(function (name) {
       this.messageHandlers[name] = function (message) {
-        this.trigger('line', message.msg + ': ' + message.value);
+        this.trigger('text_line', message.msg + ': ' + message.value);
       }
     }, this));
   },
   
   messageHandlers: _.extend(Buffer.prototype.messageHandlers, {
     connecting: function (message) {
-      this.trigger('line', 'Connecting to ' + message.hostname);
+      this.trigger('text_line', 'Connecting to ' + message.hostname);
     },
     connected: function (message) {
-      this.trigger('line', 'Connected to ' + message.hostname);
+      this.trigger('text_line', 'Connected to ' + message.hostname);
     },
     connecting_finished: function (message) {
       // FIXME: Do anything?
     },
     joining: function (message) {
-      this.trigger('line', 'Joining ' + message.channels.join(', ') + '...');
+      this.trigger('text_line', 'Joining ' + message.channels.join(', ') + '...');
     },
     user_mode: function (message) {
-      this.trigger('line', 'Your mode is: +' + message.newmode);
+      this.trigger('text_line', 'Your mode is: +' + message.newmode);
     },
     myinfo: function (message) {
       // FIXME: Do anything with this?

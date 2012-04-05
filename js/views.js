@@ -152,12 +152,13 @@ var MemberListRowView = Backbone.View.extend({
 
 var BufferView = Backbone.View.extend({
   initialize: function () {
-    _.bindAll(this, 'addLine');
+    _.bindAll(this, 'addLine', 'addTextLine');
 
     // FIXME: Is it OK to have '#' in ID?
     this.el.id = 'buffer-' + this.model.get('name');
 
     this.model.view = this;
+    this.model.bind('text_line', this.addTextLine);
     this.model.bind('line', this.addLine);
   },
   
@@ -166,7 +167,24 @@ var BufferView = Backbone.View.extend({
     $(this.el).addClass('active');
   },
   
-  addLine: function (line) {
+  addTextLine: function (line) {
     $(this.el).append($('<p>').html(line));
+  },
+
+  addLine: function (message) {
+    message.raw = JSON.stringify(message);
+    message.datetime = Util.explodeDateTime(new Date(message.time*1000));
+    
+    rendered_message = ich[message.type](message);
+    $(rendered_message).find('a').linkify({
+    //message.msg = p(message.msg);
+    //$(message.msg).linkify({
+      handleLinks: function (links) {
+        links
+          .prop('target', '_new');
+      }
+    });
+    //rendered_message = ich[message.type](message);
+    $(this.el).append(rendered_message);
   }
 });

@@ -84,6 +84,23 @@ App.prototype = {
   }
 };
 
+$('#entry').find('input').keypress(function(event) {  
+    if (event.keyCode == '13') {  
+        var text = $(event.target).val();  
+        if(text=="") return;  
+
+        try {  
+          socket.send(
+            {cid: 2283, to: "#swn", msg:"test", _reqid: reqid, _method:"say"}
+          );
+        } catch(exception){  
+          console.log(exception);  
+        }  
+
+        $(event.target).prop('value', '');
+    }  
+});
+
 
 $(function () {
   window.app = new App();
@@ -91,7 +108,7 @@ $(function () {
     el: $('#app')
   });  
 
-  var myWebSocket = new WebSocket("ws://localhost:8000");
+  var myWebSocket = new WebSocket("wss://irseas.com:44967/?password=muowah20");
   
   myWebSocket.onopen = function(evt) { 
     console.info("Connection open ..."); 
