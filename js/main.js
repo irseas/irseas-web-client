@@ -4,7 +4,9 @@ function App () {
   Util.bindMessageHandlers(this);
 }
 
-App.prototype = {  
+App.prototype = {
+  _reqid: 0,
+
   processMessage: function (message) {
     var target = this;
     
@@ -84,23 +86,6 @@ App.prototype = {
   }
 };
 
-$('#entry').find('input').keypress(function(event) {  
-    if (event.keyCode == '13') {  
-        var text = $(event.target).val();  
-        if(text=="") return;  
-
-        try {  
-          socket.send(
-            {cid: 2283, to: "#swn", msg:"test", _reqid: reqid, _method:"say"}
-          );
-        } catch(exception){  
-          console.log(exception);  
-        }  
-
-        $(event.target).prop('value', '');
-    }  
-});
-
 
 $(function () {
   window.app = new App();
@@ -108,19 +93,43 @@ $(function () {
     el: $('#app')
   });  
 
-  var myWebSocket = new WebSocket("wss://irseas.com:44967/?password=muowah20");
+  window.app.socket = new WebSocket("wss://serenity.ninjr.org:64012/?password=ahquooga5E");
   
-  myWebSocket.onopen = function(evt) { 
+  window.app.socket.onopen = function(evt) {
     console.info("Connection open ..."); 
   };
   
-  myWebSocket.onmessage = function(evt) { 
+  window.app.socket.onmessage = function(evt) {
+	// console.info(evt.data);
     window.app.processMessage(JSON.parse(evt.data)); 
   };
   
-  myWebSocket.onclose = function(evt) { 
+  window.app.socket.onclose = function(evt) {
     console.info("Connection closed."); 
   };
   
   Backbone.history.start();
+
+  $('#entry input').keypress(function(event) {
+    if (event.keyCode == 13) {
+      var text = $(this).val();
+      $(this).val('');
+
+      if (text == "") return;
+
+      // FIXME
+      var network = window.app.controller.current_network;
+      var buffer  = window.app.controller.current_buffer;
+
+      window.app.socket.send(JSON.stringify({
+            cid: network.get('nid'),
+             to: buffer.get('name'),
+            msg: text,
+         _reqid: window.app._reqid,
+        _method: "say"
+      }));
+
+      window.app._reqid ++;
+    }
+  });
 });

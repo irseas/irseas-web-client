@@ -18,6 +18,10 @@ var Router = Backbone.Router.extend({
   },
   
   buffer: function (networkId, bufferId) {
+    if (networkId < 0 || bufferId < 0) {
+      return;
+    }
+
     var network = app.networkList.get(networkId);
     if (network) {
       var buffer = network.bufferList.get(bufferId);
@@ -39,7 +43,10 @@ var Router = Backbone.Router.extend({
           $('#topic').html(topic);
         else
           $('#topic').html('');
-          
+
+        this.current_network = network;
+        this.current_buffer  = buffer;
+
         return;
       }
     }
